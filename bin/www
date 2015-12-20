@@ -1,0 +1,183 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+var app = require('../app');
+var debug = require('debug')('VRS:server');
+var http = require('http');
+var osc = require('osc');
+
+/**
+ * Get port from environment and store in Express.
+ */
+
+var port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+/**
+ * Create HTTP and WebSocket server.
+ */
+
+var server = http.createServer(app);
+var io = require('socket.io')(server);
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/* OSC Integretaion over UDP
+*/
+var udpPortSend = new osc.UDPPort({
+    localAddress: "0.0.0.0",
+    localPort: 57121
+});
+
+udpPortSend.on("ready", function () {
+    console.log("Listening for OSC over UDP.");
+    //udpPortSend.send({address:"/height", args: [0, 255, 0] }, "127.0.0.1", 57122);
+});
+
+var control;
+var prevMsgString;
+var sockets=[];
+var socketHeights;
+
+var broken = {
+    initialized : false,
+    pins : [72, 73, 74, 75, 76, 77, 575, 97],
+    initBrokenPins : function(msg) {
+        for (var i = 0; i < msg.args.length-1; i +=2) {
+            this.pins.push(msg.args[i]);
+        }
+        console.log("broken pins: " + this.pins.toString());
+        this.initialized = true;
+    }
+}
+
+udpPortSend.on("message", function (oscMessage) {
+    if (!broken.initialized) {
+        broken.initBrokenPins(oscMessage);
+    }
+    var msgString = JSON.stringify(oscMessage);
+    if (msgString != prevMsgString) {
+        var oscPinsMinusBroken=[];
+        for(var i=0; i<oscMessage.args.length-1; i+=2 ) {
+            var touchPin={};
+            touchPin.index = oscMessage.args[i];
+            touchPin.height = oscMessage.args[i+1];
+            if (broken.pins.indexOf(touchPin.index) < 0) {
+                oscPinsMinusBroken.push(touchPin);
+            }
+        }
+        if (oscPinsMinusBroken.length > 0) {
+            console.log(oscPinsMinusBroken);
+            prevMsgString = msgString;
+            for(var i=0; i<sockets.length; i++){
+                 sockets[i].emit("touch", oscPinsMinusBroken);
+            }
+        }
+    }
+});
+
+udpPortSend.on("error", function (err) {
+    console.log(err);
+});
+
+udpPortSend.open();
+
+io.on('connection', function (socket) {
+    sockets.push(socket);
+    startSocketListener();
+});
+
+
+/**
+* Handle Socket.io events
+*/
+//Storing control obj here [hack]
+
+//Send update Message
+function startSocketListener(){
+    for(var i=0; i<sockets.length; i++){
+        sockets[i].on('P', function (data) {
+            socketHeights=data;
+        	udpPortSend.send({address:"/height", args: data }, "127.0.0.1", 57122);
+            //console.log('U: %s', JSON.stringify(data));
+        });
+
+        sockets[i].on('P2', function (data) {
+            socketHeights=data;
+        	udpPortSend.send({address:"/height2", args: data }, "127.0.0.1", 57122);
+            //console.log('U: %s', JSON.stringify(data));
+        });
+
+    }
+}
+
+
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+}
