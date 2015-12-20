@@ -33,16 +33,10 @@
     <div id="example"></div>
     <div id="editor">
 //add global variables here:
-var i = 0;
+
 //this function will be executed with each frame
 return function () {
-  i += 0.075;
 
-  for (var j = 0; j < xForm.x_size; j++) {
-    for (var k = 0; k < xForm.y_size; k++) {
-      xForm.setPinHeight(j,k,(0.5 + 0.5 * Math.cos(i + j * 0.5)));
-    }
-  }
 };
     </div>
     <script type="x-shader/x-vertex" id="vertexShader">

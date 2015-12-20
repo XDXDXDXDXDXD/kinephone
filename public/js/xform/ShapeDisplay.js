@@ -24,7 +24,7 @@ function ShapeDisplay(x_size, y_size, height, scene) {
     this.height = height;
 
     //height that clearDisplay sets to
-    this.defaultPinHeight = 0.5;
+    this.defaultPinHeight = 0;
 
     this.pinLength =7;
     //keep track of touched pins
