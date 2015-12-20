@@ -32,6 +32,7 @@ function ShapeDisplay(x_size, y_size, height, scene) {
 
     this.container = new THREE.Mesh();
     this.pins = new Array(x_size * y_size);
+    this.pinHeights = new Array(x_size * y_size);
     this.physicalPinHeights = new Array(x_size * y_size);
     this.prevPhysicalPinHeights = new Array(x_size * y_size);
 
@@ -43,6 +44,7 @@ function ShapeDisplay(x_size, y_size, height, scene) {
         pin.pinIndex = i;
         this.container.add(pin);
         this.pins[i] = pin;
+        this.pinHeights[i] = 0;
         this.physicalPinHeights[i] = 0;
         this.prevPhysicalPinHeights[i] = 0;
     }
@@ -95,13 +97,28 @@ ShapeDisplay.prototype.setPositionX = function(x) {
                                     this.container.position.z);
 }
 ShapeDisplay.prototype.getPinPosition = function(x, y){
-    var index = this.getIndex(x, y);
+    if (y)
+        var index = this.getIndex(x, y);
+    else
+        var index = x;
     if (index < this.pins.length)
         return this.pins[index].position;
     return null;
 }
+ShapeDisplay.prototype.getPinHeight = function(x, y) {
+    if (y)
+        var index = this.getIndex(x, y);
+    else
+        var index = x;
+    if (index < this.pins.length)
+        return this.pinHeights[index];
+    return null;
+}
 ShapeDisplay.prototype.getPinHeightForPhysical = function(x, y) {
-    var index = this.getIndex(x, y);
+    if (y)
+        var index = this.getIndex(x, y);
+    else
+        var index = x;
     if (index < this.pins.length)
         return this.pins[index].position.y * 255 / this.pinLength;
     return null;
@@ -120,10 +137,36 @@ ShapeDisplay.prototype.setPinHeight = function(x, y, h) {
         index = x;
         h = y;
     }
+    this.setPinHeightHelper(index, h);
+}
+ShapeDisplay.prototype.movePinDown = function(x, y, amount) {
+  if (amount || (amount == 0))
+    var index = this.getIndex(x, y);
+  else {
+      index = x;
+      amount = y;
+  }
+  if (index < this.pins.length) {
+      this.setPinHeightHelper(index, this.pinHeights[index]-amount);
+  }
+}
+ShapeDisplay.prototype.movePinUp = function(x, y, amount) {
+  if (amount || (amount == 0))
+    var index = this.getIndex(x, y);
+  else {
+      index = x;
+      amount = y;
+  }
+  if (index < this.pins.length) {
+      this.setPinHeightHelper(index, this.pinHeights[index]+amount);
+  }
+}
+ShapeDisplay.prototype.setPinHeightHelper = function(index, h) {
     if (index < this.pins.length) {
         h = (h > 1) ? 1 : h;
         h = (h < 0) ? 0 : h;
         this.pins[index].position.y = h * this.pinLength/2;
+        this.pinHeights[index] = h;
         this.physicalPinHeights[index] = Math.round(h * 255);
     }
 }
