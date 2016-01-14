@@ -1,6 +1,24 @@
 # Kinephone
 
-Experiments to make music on the Tangible Media Group shape displays
+We can experiment with rhythms on the virtual model of the shape display. Example code can be found at public/examples/rhythms.js
+* [CooperForm] (http://xiaosquared.com/formation/cooperform.html) (24 x 24)
+* [TransForm] (http://xiaosquared.com/formation/transform.html) (3 islands of 16 x 24)
+
+You can also run the virtual shape display from your own computer. In a terminal:
+``` 
+git clone https://github.com/XDXDXDXDXDXD/kinephone.git && cd kinephone
+npm install
+npm start
+```
+In a browser, go to localhost:3000/c or localhost:3000/t
+
+Keyboard controls:
+* _Ctrm-m_: opens and closes the browser
+* _Enter_: run the current script
+* _Space_: pause
+* _d_: clear
+
+You can also add more functionality to the underlying javascript if you clone your own copy. If you plan to do that, please make a new branch in the repo.
 
 ### License
 
