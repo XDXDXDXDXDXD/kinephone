@@ -2,6 +2,7 @@
 // 120 BMP //
 /////////////
 
+// this runs at appx 120 bpm
 var frame = 0;
 var fpm = 12; // frames per measure
 var row = 0;  // which row we are on
