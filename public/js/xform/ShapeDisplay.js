@@ -139,7 +139,7 @@ ShapeDisplay.prototype.setPinHeight = function(x, y, h) {
     }
     this.setPinHeightHelper(index, h);
 }
-ShapeDisplay.prototype.movePinDown = function(x, y, amount) {
+ShapeDisplay.prototype.pinHeightPlus = function(x, y, amount) {
   if (amount || (amount == 0))
     var index = this.getIndex(x, y);
   else {
@@ -150,7 +150,7 @@ ShapeDisplay.prototype.movePinDown = function(x, y, amount) {
       this.setPinHeightHelper(index, this.pinHeights[index]-amount);
   }
 }
-ShapeDisplay.prototype.movePinUp = function(x, y, amount) {
+ShapeDisplay.prototype.pinHeightMinus = function(x, y, amount) {
   if (amount || (amount == 0))
     var index = this.getIndex(x, y);
   else {
@@ -254,6 +254,28 @@ Transform.prototype.setPinHeight = function(x, y, h) {
     }
     this.shapeDisplays[~~(x/16)].setPinHeight(x%16, y, h);
 }
+Transform.prototype.pinHeightPlus = function(x, y, amount, max) {
+    max = max ? max : 1;
+    if (x >= this.x_size || y >= this.y_size) {
+        console.log("Setting out of bounds: x: " + x + ", y: " + y);
+        return;
+    }
+    var selectedDisplay = this.shapeDisplays[~~(x/16)];
+    var currentHeight = selectedDisplay.pinHeights[selectedDisplay.getIndex(x%16, y)];
+    var newHeight = Math.min(max, currentHeight + amount);
+    selectedDisplay.setPinHeight(x%16, y, newHeight);
+}
+Transform.prototype.pinHeightMinus = function(x, y, amount, min) {
+    min = min ? min : 0;
+    if (x >= this.x_size || y >= this.y_size) {
+        console.log("Setting out of bounds: x: " + x + ", y: " + y);
+        return;
+    }
+    var selectedDisplay = this.shapeDisplays[~~(x/16)];
+    var currentHeight = selectedDisplay.pinHeights[selectedDisplay.getIndex(x%16, y)];
+    var newHeight = Math.max(min, currentHeight - amount);
+    selectedDisplay.setPinHeight(x%16, y, newHeight);
+}
 Transform.prototype.setPinHeightFromPhysical = function(x, y, h) {
     this.setPinHeight(x, y, h/255);
 }
@@ -268,15 +290,6 @@ Transform.prototype.getHeightsMsgForPhysical = function(topHalf) {
         msg.push(~~(selectedDisplay.physicalPinHeights[selectedDisplay.getIndex(x, y)]));
     }
     return msg;
-    // return this.shapeDisplays.reduce(function(prev, current, i) {
-    //     var currentMsg = current.getHeightsMsgForPhysical(i * 16);
-    //
-    //     if (currentMsg.length == 0)
-    //         return prev;
-    //     if (prev.length == 0)
-    //         return currentMsg;
-    //     return prev + "-" + currentMsg;
-    // }, "");
 }
 Transform.prototype.clearDisplay = function(h) {
     this.shapeDisplays.map(function(display) {

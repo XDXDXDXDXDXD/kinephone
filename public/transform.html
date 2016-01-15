@@ -32,18 +32,58 @@
   <body>
     <div id="example"></div>
     <div id="editor">
-//add global variables here:
-var i = 0;
-//this function will be executed with each frame
-return function () {
-  i += 0.075;
+      var MIN_HEIGHT = 0.25;      // so that the cap won't fall off
+      var RETRACT_AMOUNT = 0.025;  // fast enough to retract a good amount, slow enough not to be audible
 
-  for (var j = 0; j < xForm.x_size; j++) {
-    for (var k = 0; k < xForm.y_size; k++) {
-      xForm.setPinHeight(j,k,(0.5 + 0.5 * Math.cos(i + j * 0.5)));
-    }
-  }
-};
+      var frame = 0;
+      var fpm = 28;
+      var tick;
+
+
+      var activePins = [
+          {x: 1, y: 0, hit: false},
+          {x: 1, y: 2, hit: false},
+          {x: 1, y: 4, hit: false},
+          {x: 1, y: 6, hit: false},
+      ];
+
+      function activatePins(activePins, shapeDisplay) {
+          activePins.map(function(pin) {
+             shapeDisplay.setPinHeight(pin.x, pin.y, 1);
+          });
+      }
+      activatePins(activePins, xForm);
+
+      return function() {
+          tick = frame % fpm;
+
+          switch (tick) {
+              case 0:
+                  xForm.setPinHeight(1, 0, MIN_HEIGHT);
+                  activePins[0].hit = true;
+                  break;
+              case 7:
+                  xForm.setPinHeight(1, 2, MIN_HEIGHT);
+                  activePins[0].hit = true;
+                  break;
+              case 14:
+                  xForm.setPinHeight(1, 4, MIN_HEIGHT);
+                  activePins[0].hit = true;
+                  break;
+              case 21:
+                  xForm.setPinHeight(1, 6, MIN_HEIGHT);
+                  activePins[0].hit = true;
+                  break;
+          }
+
+          activePins.map(function(pin) {
+              if (pin.hit)
+                  pin.hit = false;
+              else
+                  xForm.pinHeightPlus(pin.x, pin.y, RETRACT_AMOUNT, 1);
+          });
+          frame ++;
+      };
     </div>
     <script type="x-shader/x-vertex" id="vertexShader">
         varying vec3 vWorldPosition;

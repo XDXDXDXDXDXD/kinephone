@@ -32,16 +32,49 @@
   <body>
     <div id="example"></div>
     <div id="editor">
-//add global variables here:
-var counter = 0;
-//this function will be executed with each frame
-return function () {
-  if (counter%12 === 0)
-    xForm.setPinHeight(0, 0, 1);
-  else if (counter%12 == 2)
-    xForm.setPinHeight(0, 0, 0);
-  counter++;
-};
+// this runs at appx 120 bpm
+var frame = 0;
+var fpm = 12; // frames per measure
+var row = 0;  // which row we are on
+
+var tick, pin;
+
+return function() {     // this function runs at each frame
+    tick = frame % fpm;
+    pin = row * 24;
+    switch (tick) {
+        case 0:
+            xForm.setPinHeight(pin, 1); // making the pin go up to a height of 1 is loudest sound
+            break;
+        case 1:
+            break;
+        case 2:
+            break;
+        case 3:
+            xForm.setPinHeight(pin + 3, 0.5);   // 0.5 makes a softer sound
+            break;
+        case 4:
+            break;
+        case 5:
+            break;
+        case 6:
+            xForm.setPinHeight(pin + 6, 0.5);
+            break;
+        case 7:
+            break;
+        case 8:
+            break;
+        case 9:
+            xForm.setPinHeight(pin + 9, 0.5);
+            break;
+        case 10:
+            break;
+        case 11:
+            row++;  // When we're done with the measure, we increment the row
+            break;
+    }
+        frame++;
+}
 
     </div>
     <script type="x-shader/x-vertex" id="vertexShader">
