@@ -1,4 +1,4 @@
-// FOUR AT ONCE 
+// FOUR AT ONCE
 
    var MIN_HEIGHT = 0.25;      // so that the cap won't fall off
    var RETRACT_AMOUNT = 0.025;  // fast enough to retract a good amount, slow enough not to be audible
@@ -120,3 +120,58 @@ return function() {
     }
     frame++;
 };
+
+/////////////////////////////////////////////////////////////////////////////////
+
+// BEAT: ta ta DUM, ta ta DUM
+
+      var MIN_HEIGHT = 0.25;      // so that the cap won't fall off
+      var RETRACT_AMOUNT = 0.025;  // fast enough to retract a good amount, slow enough not to be audible
+
+      var frame = 0;
+      var fpm = 16; // frames per measure = how many frames are in a cycle
+      var tick;
+
+
+      var activePins = [
+          {x: 1, y: 0, retract: false, retractUp: false},
+          {x: 1, y: 2, retract: false, retractUp: true}
+      ];
+
+      function activatePins(activePins, shapeDisplay) {
+          activePins.map(function(pin) {
+             shapeDisplay.setPinHeight(pin.x, pin.y, 1);
+          });
+      }
+      activatePins(activePins, xForm);
+
+      return function() {
+          tick = frame % fpm;
+
+          switch (tick) {
+            case 0:
+                xForm.setPinHeight(1, 0, .5);
+                activePins[0].retract = false;
+                break;
+            case 2:
+                xForm.setPinHeight(1, 0, .75);
+                activePins[0].retract = true;
+                break;
+            case 8:
+                xForm.setPinHeight(1, 2, .25);
+                activePins[1].retract = true;
+                break;
+                  }
+
+          activePins.map(function(pin) {
+              if (pin.retract) {
+                if (pin.retractUp)
+                    xForm.pinHeightPlus(pin.x, pin.y, RETRACT_AMOUNT, 1);
+                else
+                    xForm.pinHeightMinus(pin.x, pin.y, RETRACT_AMOUNT, MIN_HEIGHT);
+              }
+          });
+          frame ++;
+      };
+
+/////////////////////////////////////////////////////////////////////////////////

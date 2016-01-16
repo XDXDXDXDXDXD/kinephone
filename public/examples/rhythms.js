@@ -1,3 +1,5 @@
+
+
 /////////////
 // 120 BMP //
 /////////////
@@ -11,31 +13,30 @@ var tick, pin;
 
 return function() {     // this function runs at each frame
     tick = frame % fpm;
-    pin = row * 24;
     switch (tick) {
         case 0:
-            xForm.setPinHeight(pin, 1); // making the pin go up to a height of 1 is loudest sound
+            xForm.setPinHeight(0, row, 1); // making the pin go up to a height of 1 is loudest sound
             break;
         case 1:
             break;
         case 2:
             break;
         case 3:
-            xForm.setPinHeight(pin + 3, 0.5);   // 0.5 makes a softer sound
+            xForm.setPinHeight(3, row, 0.5);   // 0.5 makes a softer sound
             break;
         case 4:
             break;
         case 5:
             break;
         case 6:
-            xForm.setPinHeight(pin + 6, 0.5);
+            xForm.setPinHeight(6, row, 0.5);
             break;
         case 7:
             break;
         case 8:
             break;
         case 9:
-            xForm.setPinHeight(pin + 9, 0.5);
+            xForm.setPinHeight(9, row, 0.5);
             break;
         case 10:
             break;
