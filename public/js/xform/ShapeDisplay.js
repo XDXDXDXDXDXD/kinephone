@@ -247,7 +247,16 @@ function Transform(height, scene) {
     this.container.add(this.right.getGeometry());
     scene.add(this.container);
 }
+Transform.prototype.toXY = function(i) {
+    return [i%48, ~~(i/48)];
+}
 Transform.prototype.setPinHeight = function(x, y, h) {
+    if (!h) {
+        h = y;
+        var xy = this.toXY(x);
+        x = xy[0];
+        y = xy[1];
+    }
     if (x >= this.x_size || y >= this.y_size) {
         console.log("Setting out of bounds: x: " + x + ", y: " + y);
         return;

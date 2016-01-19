@@ -31,58 +31,6 @@
   </head>
   <body>
     <div id="example"></div>
-    <div id="editor">
-        // BEAT: ta ta DUM, ta ta DUM
-
-              var MIN_HEIGHT = 0.25;      // so that the cap won't fall off
-              var RETRACT_AMOUNT = 0.025;  // fast enough to retract a good amount, slow enough not to be audible
-
-              var frame = 0;
-              var fpm = 16; // frames per measure = how many frames are in a cycle
-              var tick;
-
-
-              var activePins = [
-                  {x: 1, y: 0, retract: false, retractUp: false},
-                  {x: 1, y: 2, retract: false, retractUp: true}
-              ];
-
-              function activatePins(activePins, shapeDisplay) {
-                  activePins.map(function(pin) {
-                     shapeDisplay.setPinHeight(pin.x, pin.y, 1);
-                  });
-              }
-              activatePins(activePins, xForm);
-
-              return function() {
-                  tick = frame % fpm;
-
-                  switch (tick) {
-                    case 0:
-                        xForm.setPinHeight(1, 0, .5);
-                        activePins[0].retract = false;
-                        break;
-                    case 2:
-                        xForm.setPinHeight(1, 0, .75);
-                        activePins[0].retract = true;
-                        break;
-                    case 8:
-                        xForm.setPinHeight(1, 2, .25);
-                        activePins[1].retract = true;
-                        break;
-                          }
-
-                  activePins.map(function(pin) {
-                      if (pin.retract) {
-                        if (pin.retractUp)
-                            xForm.pinHeightPlus(pin.x, pin.y, RETRACT_AMOUNT, 1);
-                        else
-                            xForm.pinHeightMinus(pin.x, pin.y, RETRACT_AMOUNT, MIN_HEIGHT);
-                      }
-                  });
-                  frame ++;
-              };
-    </div>
     <script type="x-shader/x-vertex" id="vertexShader">
         varying vec3 vWorldPosition;
         void main() {
@@ -104,7 +52,6 @@
         }
     </script>
     <script src="/socket.io/socket.io.js" type="text/javascript"></script>
-    <script src="js/ace/ace.js" type="text/javascript"></script>
     <script src="js/3js/three.min.js" type="text/javascript"></script>
     <script src="js/xform/ShapeDisplay.js" type="text/javascript"></script>
     <script src="js/xform/TouchManager.js" type="text/javascript"></script>
@@ -127,21 +74,19 @@
     var mapImageContext;
     var xForm;
 
-    var pause = true;
-
-    var editor = ace.edit("editor");
-    editor.setTheme("ace/theme/twilight");
-    editor.getSession().setMode("ace/mode/javascript");
-    editor.setOption("showPrintMargin", false);
-    editor.setOption("fontSize", 13);
-    //make control+m hide the editor
-    editor.commands.addCommand({
-        name: 'hideEditor',
-        bindKey: 'Ctrl-M',
-        exec: function(editor) {
-            document.getElementById('editor').style.display = 'none';
+    var sequence = {
+        raisedPins : [],
+        addPin : function(i) {
+            this.raisedPins.push(i);
+        },
+        containsPin : function(i) {
+            return this.raisedPins.indexOf(i) >= 0;
+        },
+        removePin : function(i) {
+            var index = this.raisedPins.indexOf(i);
+            this.raisedPins.splice(index, 1);
         }
-    });
+    };
 
     init();
     animate();
@@ -151,8 +96,24 @@
     });
 
     socket.on("touch", function(data) {
-        console.log(data[0].index);
+        console.log(data[0]);
+        if (sequence.containsPin(data[0].index)) {
+            xForm.setPinHeight(data[0].index, 0.3);
+            sequence.removePin(data[0].index);
+        } else {
+            xForm.setPinHeight(data[0].index, 0.75);
+            sequence.addPin(data[0].index);
+        }
     });
+
+    function kInit() {
+        xForm.clearDisplay(0.3);
+    }
+
+    function kUpdate() {
+
+    }
+
 
     function init() {
 
@@ -242,6 +203,8 @@
         };
         var gui = new dat.GUI();
         gui.add(controlVars, 'sendToPhysical', false);
+
+        kInit();
     }
 
     // Helper Functions
@@ -263,8 +226,9 @@
       resize();
 
       camera.updateProjectionMatrix();
+      kUpdate();
 
-      if (!pause && controlVars.sendToPhysical) {
+      if (controlVars.sendToPhysical) {
           // for OSC message length, dividing the shape display into 2 halves to send
           msgTop = xForm.getHeightsMsgForPhysical(true);
           if (msgTop.length > 0) {
@@ -280,16 +244,6 @@
     function animate(t) {
         setTimeout(function() {
             requestAnimationFrame(animate);
-
-            if (!pause) {
-                try {
-                    this.code();
-                }
-                catch (err) {
-                    console.log(err.toString());
-                    pause = true;
-                }
-            }
             update(clock.getDelta());
             renderer.render(scene, camera);
 
@@ -311,17 +265,11 @@
     windowX = 0
     windowY = 0
     window.addEventListener('keydown', function(e) {
-        var codingWindowVisible = document.getElementById('editor').style.display;
-        //only move map if coding window not visible
-        if (codingWindowVisible === 'none') {
             console.log(e.keyCode);
             switch(e.keyCode) {
                 case 68:
-                    this.code = function() {};
-                    xForm.clearDisplay();
-                    pause = true;
+                    xForm.clearDisplay(0.3);
                 case 32:
-                    pause = !pause;
                 case 37:
                     windowX += 1;
                 break;
@@ -336,35 +284,12 @@
                 break;
                 //Enter runs the code
                 case 13:
-                  this.changeCode();
-                break;
-                //if Ctrl+M is pressed, show editor
-                case 77:
-                  if (e.ctrlKey) {
-                    document.getElementById('editor').style.display = 'block';
-                    editor.focus();
-                  }
+
                 break;
             }
-        }
     });
 
-    this.code = function() {};
-    this.changeCode = function() {
-      xForm.clearDisplay();
-      var _executedCode;
-      try {
-        var userCode = new Function('"use strict";\n' + editor.getValue());
-        executedCode = userCode();
-        pause = false;
-      }
-      catch (err) {
-        console.log(err.toString());
-      }
-      if (executedCode) {
-        this.code = executedCode;
-      }
-    }
+
 
   </script>
   </body>
