@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>FORMation : TransFORM</title>
+    <title>FORMation : KineFORM Simulator</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <style>
@@ -76,6 +76,7 @@
 
     var sequence = {
         raisedPins : [],
+        isPlaying: true,
         addPin : function(i) {
             this.raisedPins.push(i);
         },
@@ -85,8 +86,19 @@
         removePin : function(i) {
             var index = this.raisedPins.indexOf(i);
             this.raisedPins.splice(index, 1);
+        },
+        clearAll: function(){
+            this.raisedPins = [];
+        },
+        stop: function(){
+            this.isPlaying = false;
+        },
+        play: function(){
+            this.isPlaying = true;
         }
     };
+
+    var beatBank = [];
 
     init();
     animate();
@@ -204,9 +216,8 @@
         setTimeout(resize, 1);
 
         // control variables
-        // control variables
         controlVars = new function () {
-            this.sendToPhysical = true;
+            this.sendToPhysical = false;
         };
         var gui = new dat.GUI();
         gui.add(controlVars, 'sendToPhysical', true);
@@ -269,34 +280,14 @@
       }
     }
 
-    windowX = 0
-    windowY = 0
     window.addEventListener('keydown', function(e) {
             console.log(e.keyCode);
             switch(e.keyCode) {
-                case 68:
+                case 67:
                     xForm.clearDisplay(0.3);
-                case 32:
-                case 37:
-                    windowX += 1;
-                break;
-                case 39:
-                    windowX -= 1;
-                break;
-                case 38:
-                    windowY += 1;
-                break;
-                case 40:
-                    windowY -= 1;
-                break;
-                //Enter runs the code
-                case 13:
-
                 break;
             }
     });
-
-
 
   </script>
   </body>
