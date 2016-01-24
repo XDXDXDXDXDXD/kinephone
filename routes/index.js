@@ -30,7 +30,7 @@ router.get('/p', function(req, res, next) {
 });
 
 router.get('/k', function(req, res, next) {
-  res.sendFile('kineform.html',options, function(err){
+  res.sendFile('xineform.html',options, function(err){
     if (err) res.status(err.status).end();
   });
 });

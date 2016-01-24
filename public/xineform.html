@@ -101,9 +101,6 @@
     });
 
     socket.on("touch", function(data) {
-        //console.log(data[0]);
-
-
 
         // if pin UP, set it DOWN
         if (sequence.containsPin(data[0].index) &&
@@ -124,78 +121,48 @@
         xForm.clearDisplay(0.3);
     }
 
-    var activePins = [
-        {x: 1, y:0, retract: false, retractUp: false},
-        {x: 1, y: 2, retract: false, retractUp: true}
-    ];
-    function activatePins(activePins, shapeDisplay) {
-        activePins.map(function(pin) {
-           shapeDisplay.setPinHeight(pin.x, pin.y, 1);
-        });
-    }
-    activatePins(activePins, xForm);
-
     var MIN_HEIGHT = 0.25;      // so that the cap won't fall off
     var RETRACT_AMOUNT = 0.025;  // fast enough to retract a good amount, slow enough not to be audible
 
     var frame = 0;
-    var fpm = 16;
+    var fpm = 32;
     var tick;
-    var flipflop = false;
+
+    var pinGroup = {
+        pins : [    {x: 0, y: 0, up:false},
+                    {x: 0, y: 2, up:false},
+                    {x: 0, y: 4, up:false},
+                    {x: 0, y: 6, up:false} ],
+        currentPin : 0
+    }
+
+    var xxSequence = {
+        pattern : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        cursor : -1,
+        getCurrentAction : function() {
+            this.cursor = (this.cursor + 1) % 16;
+            return this.pattern[this.cursor];
+        }
+    }
 
     function kUpdate() {
         tick = frame % fpm;
 
+        xxSequence.pattern =  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
         for(var i=0; i<sequence.raisedPins.length;i++){
-                flipflop = !flipflop;
-                switch (tick) {
-                case xForm.toXY(sequence.raisedPins[i])[1]-7:
-                    xForm.setPinHeight(1, 0, flipflop ? .5 : 0.75);
-                    activePins[0].retract = false;
-                break;
+                xxSequence.pattern[xForm.toXY(sequence.raisedPins[i])[1]-7]=1;
+        }
+
+        if (tick%2 == 0) {
+            if (xxSequence.getCurrentAction() == 1) {
+                var pin = pinGroup.pins[pinGroup.currentPin];
+                xForm.setPinHeight(pin.x, pin.y, pin.up ? 0.5 : 0.75);
+                pin.up = !pin.up;
+                pinGroup.currentPin = (pinGroup.currentPin+1)%4;
             }
         }
-            // case 1:
-            // xForm.setPinHeight(1, 0, .65);
-            // activePins[0].retract = false;
-            // break;
-            // case 3:
-            // xForm.setPinHeight(1, 0, .5);
-            // activePins[0].retract = false;
-            // break;
-            // case 5:
-            // xForm.setPinHeight(1, 0, .65);
-            // activePins[0].retract = false;
-            // break;
-            // case 7:
-            // xForm.setPinHeight(1, 0, .5);
-            // activePins[0].retract = false;
-            // break;
-            // case 9:
-            // xForm.setPinHeight(1, 0, .65);
-            // activePins[0].retract = false;
-            // break;
-            // case 11:
-            // xForm.setPinHeight(1, 0, .5);
-            // activePins[0].retract = false;
-            // break;
-            // case 13:
-            // xForm.setPinHeight(1, 0, .65);
-            // activePins[0].retract = false;
-            // break;
-            // case 15:
-            // xForm.setPinHeight(1, 0, .5);
-            // activePins[0].retract = false;
-            // break;
 
-        activePins.map(function(pin) {
-            if (pin.retract) {
-              if (pin.retractUp)
-                  xForm.pinHeightPlus(pin.x, pin.y, RETRACT_AMOUNT, 1);
-              else
-                  xForm.pinHeightMinus(pin.x, pin.y, RETRACT_AMOUNT, MIN_HEIGHT);
-            }
-        });
         frame ++;
     }
 
