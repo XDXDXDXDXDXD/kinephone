@@ -73,25 +73,71 @@
 
     var mapImageContext;
     var xForm;
+    var GROUND = 0.3;
+    var frame = 0;
+    var fpm = 32;
+    var tick;
 
-    var sequence = {
-        raisedPins : [],
-        addPin : function(p) {
-            console.log("adding pin %d",p);
-            this.raisedPins.push(p);
-            this.raisedPins = this.raisedPins.reduce(function(a,b){
-                if (a.indexOf(b) < 0 ) a.push(b)
-                return a;
-            },[]);
-        },
-        containsPin : function(i) {
-            return this.raisedPins.indexOf(i) >= 0;
-        },
-        removePin : function(i) {
-            var index = this.raisedPins.indexOf(i);
-            this.raisedPins.splice(index, 1);
+    function Sequence(col){
+        this.beat = {
+            col:col,
+            raisedPins : [],
+            pattern : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            cursor : -1,
+            pins : [    {x: col, y: 0, up:false},
+                        {x: col, y: 2, up:false},
+                        {x: col, y: 4, up:false},
+                        {x: col, y: 6, up:false} ],
+            currentPin : 0,
+            addPin : function(p) {
+                console.log("adding pin %d",p);
+                xForm.setPinHeight(p, 0.75);
+                this.raisedPins.push(p);
+                this.raisedPins = this.raisedPins.reduce(function(a,b){
+                    if (a.indexOf(b) < 0 ) a.push(b)
+                    return a;
+                },[]);
+            },
+            containsPin : function(i) {
+                return this.raisedPins.indexOf(i) >= 0;
+            },
+            removePin : function(p) {
+                var index = this.raisedPins.indexOf(p);
+                xForm.setPinHeight(p, GROUND);
+                this.raisedPins.splice(index, 1);
+            },
+            getCurrentAction : function() {
+                this.cursor = (this.cursor + 1) % 16;
+                return this.pattern[this.cursor];
+            },
+            resetPattern: function(){
+                this.pattern =  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            },
+            mapSequenceToPattern: function(){
+                this.resetPattern();
+                for(var i=0; i<this.raisedPins.length;i++){
+                        this.pattern[xForm.toXY(this.raisedPins[i])[1]-7]=1;
+                }
+            },
+            animate: function(){
+                if (this.getCurrentAction() == 1) {
+                    var pin = this.pins[this.currentPin];
+                    xForm.setPinHeight(pin.x, pin.y, pin.up ? 0.5 : 0.75);
+                    pin.up = !pin.up;
+                    this.currentPin = (this.currentPin+1)%4;
+                }
+            }
         }
-    };
+    }
+    var sequencer = {
+        cols:[0,2,4,6,8,10,12,14],
+        beats:[]
+    }
+    for(var i=0; i<sequencer.cols.length; i++){
+        var sequence = new Sequence(sequencer.cols[i]);
+        sequencer.beats.push(sequence);
+    }
+
 
     init();
     animate();
@@ -105,61 +151,36 @@
         // if pin UP, set it DOWN
         if (sequence.containsPin(data[0].index) &&
             (data[0].height == 127 || data[0].height == 137)) {
-                xForm.setPinHeight(data[0].index, 0.3);
-                sequence.removePin(data[0].index);
+                for(var i=0; i<sequencer.cols.length; i++){
+                    if(xForm.toXY(data[0].index)[0] == sequencer.cols[i])
+                        sequencer.beats[i].beat.removePin(data[0].index);
+                }
         }
 
         // if pin DOWN, set it UP
         else if (data[0].height == 0 || data[0].height == 10) {
-            xForm.setPinHeight(data[0].index, 0.75);
-            sequence.addPin(data[0].index);
+            for(var i=0; i<sequencer.cols.length; i++){
+                if(xForm.toXY(data[0].index)[0] == sequencer.cols[i])
+                    sequencer.beats[i].beat.addPin(data[0].index);
+            }
         }
 
     });
 
     function kInit() {
-        xForm.clearDisplay(0.3);
+        xForm.clearDisplay(GROUND);
     }
 
-    var MIN_HEIGHT = 0.25;      // so that the cap won't fall off
-    var RETRACT_AMOUNT = 0.025;  // fast enough to retract a good amount, slow enough not to be audible
-
-    var frame = 0;
-    var fpm = 32;
-    var tick;
-
-    var pinGroup = {
-        pins : [    {x: 0, y: 0, up:false},
-                    {x: 0, y: 2, up:false},
-                    {x: 0, y: 4, up:false},
-                    {x: 0, y: 6, up:false} ],
-        currentPin : 0
-    }
-
-    var xxSequence = {
-        pattern : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        cursor : -1,
-        getCurrentAction : function() {
-            this.cursor = (this.cursor + 1) % 16;
-            return this.pattern[this.cursor];
-        }
-    }
 
     function kUpdate() {
         tick = frame % fpm;
-
-        xxSequence.pattern =  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
-        for(var i=0; i<sequence.raisedPins.length;i++){
-                xxSequence.pattern[xForm.toXY(sequence.raisedPins[i])[1]-7]=1;
+        for(var i=0; i<sequencer.cols.length; i++){
+            sequencer.beats[i].beat.mapSequenceToPattern();
         }
 
         if (tick%2 == 0) {
-            if (xxSequence.getCurrentAction() == 1) {
-                var pin = pinGroup.pins[pinGroup.currentPin];
-                xForm.setPinHeight(pin.x, pin.y, pin.up ? 0.5 : 0.75);
-                pin.up = !pin.up;
-                pinGroup.currentPin = (pinGroup.currentPin+1)%4;
+            for(var i=0; i<sequencer.cols.length; i++){
+                sequencer.beats[i].beat.animate();
             }
         }
 
