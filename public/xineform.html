@@ -81,6 +81,7 @@
     function Sequence(col){
         this.beat = {
             col:col,
+            isPlaying:true,
             raisedPins : [],
             pattern : [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             cursor : -1,
@@ -90,7 +91,7 @@
                         {x: col, y: 6, up:false} ],
             currentPin : 0,
             addPin : function(p) {
-                console.log("adding pin %d",p);
+                //console.log("adding pin %d",p);
                 xForm.setPinHeight(p, 0.75);
                 this.raisedPins.push(p);
                 this.raisedPins = this.raisedPins.reduce(function(a,b){
@@ -129,45 +130,83 @@
             }
         }
     }
+
     var sequencer = {
+        shakerPins: [],
         cols:[0,2,4,6,8,10,12,14],
-        beats:[]
+        beats:[],
+        controls:[],
+        isControl: function(p) {
+            var b = false;
+            for(var i=0; i<this.controls.length;i++){
+                if(this.controls[i] == p)
+                    b = true;
+            }
+            return b;
+        }
     }
+
     for(var i=0; i<sequencer.cols.length; i++){
         var sequence = new Sequence(sequencer.cols[i]);
         sequencer.beats.push(sequence);
     }
 
-
     init();
     animate();
 
+    //TODO: debug start/stop pin here!
+    // for(var i=0; i<sequencer.cols.length; i++){
+    //     var index = xForm.toIndex(sequencer.cols[i],23);
+    //     xForm.setPinHeight(index,1);
+    //     sequencer.controls.push(index);
+    // }
+
+    for(var i=0; i<sequencer.shakerPins.length; i++){
+        xForm.setPinHeight(sequencer.shakerPins[i],GROUND+0.2);
+    }
     socket.on("connect", function(){
         console.log("CONNECTION");
     });
 
     socket.on("touch", function(data) {
-
+        var x = xForm.toXY(data[0].index)[0];
+        var y = xForm.toXY(data[0].index)[1];
+        var h = data[0].height;
+        console.log(h);
         // if pin UP, set it DOWN
-        if (sequence.containsPin(data[0].index) &&
-            (data[0].height == 127 || data[0].height == 137)) {
+        if ((h == 127 || h == 137) && y != 23) {
+
                 for(var i=0; i<sequencer.cols.length; i++){
-                    if(xForm.toXY(data[0].index)[0] == sequencer.cols[i])
+                    if(x == sequencer.cols[i])
                         sequencer.beats[i].beat.removePin(data[0].index);
                 }
         }
 
         // if pin DOWN, set it UP
-        else if (data[0].height == 0 || data[0].height == 10) {
+        else if ((h == 0 || h == 10) && y != 23) {
             for(var i=0; i<sequencer.cols.length; i++){
-                if(xForm.toXY(data[0].index)[0] == sequencer.cols[i])
+                if(x == sequencer.cols[i] )
                     sequencer.beats[i].beat.addPin(data[0].index);
+            }
+        }
+
+        if(y == 23){
+            for(var i=0; i<sequencer.cols.length; i++){
+                if(x == sequencer.cols[i] ){
+                    console.log("Pause/Play col %d", x)
+                    sequencer.beats[i].beat.isPlaying = !sequencer.beats[i].beat.isPlaying;
+                }
             }
         }
 
     });
 
     function kInit() {
+        for(var i=0; i<sequencer.cols.length; i++){
+            sequencer.beats[i].beat.pins.map(function(pin) {
+                sequencer.shakerPins.push(xForm.toIndex(pin.x, pin.y));
+            });
+        }
         xForm.clearDisplay(GROUND);
     }
 
@@ -180,8 +219,13 @@
 
         if (tick%2 == 0) {
             for(var i=0; i<sequencer.cols.length; i++){
-                sequencer.beats[i].beat.animate();
+                if(sequencer.beats[i].beat.isPlaying)
+                    sequencer.beats[i].beat.animate();
             }
+            var ind = xForm.toIndex(15,sequencer.beats[0].beat.cursor+7);
+            var pre = xForm.toIndex(15,sequencer.beats[0].beat.cursor+6);
+            xForm.setPinHeight(pre,0.3);
+            xForm.setPinHeight(ind,0.37);
         }
 
         frame ++;

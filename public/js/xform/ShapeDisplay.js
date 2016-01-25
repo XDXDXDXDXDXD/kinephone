@@ -250,6 +250,9 @@ function Transform(height, scene) {
 Transform.prototype.toXY = function(i) {
     return [i%48, ~~(i/48)];
 }
+Transform.prototype.toIndex = function(x, y) {
+    return (y * 48) + x;
+}
 Transform.prototype.setPinHeight = function(x, y, h) {
     if (!h) {
         h = y;
