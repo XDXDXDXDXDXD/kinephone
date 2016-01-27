@@ -145,7 +145,7 @@
                       {note:"D",length:6},
                       {note:"E",length:5}]
     }
-    
+
     function Note(n, len, start_x, start_y){
         this.note = n;
         for(var i=0; i<len; i++){
@@ -246,7 +246,7 @@
             sequencer.beats[i].beat.mapSequenceToPattern();
         }
 
-        if (tick%2 == 0) {
+        //if (tick%2 == 0) {
             for(var i=0; i<sequencer.cols.length; i++){
                 if(sequencer.beats[i].beat.isPlaying)
                     sequencer.beats[i].beat.animate();
@@ -255,7 +255,7 @@
             var pre = xForm.toIndex(15,sequencer.beats[0].beat.cursor+6);
             xForm.setPinHeight(pre,0.3);
             xForm.setPinHeight(ind,0.37);
-        }
+        //}
 
         frame ++;
     }
