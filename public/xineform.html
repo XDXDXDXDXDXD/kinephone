@@ -131,6 +131,35 @@
         }
     }
 
+    var synth = {
+        xylobricks: [{note:"A",length:10},
+                      {note:"B",length:9},
+                      {note:"C",length:9},
+                      {note:"D",length:8},
+                      {note:"E",length:8},
+                      {note:"F",length:8},
+                      {note:"G",length:7},
+                      {note:"A",length:7},
+                      {note:"B",length:7},
+                      {note:"C",length:6},
+                      {note:"D",length:6},
+                      {note:"E",length:5}]
+    }
+    
+    function Note(n, len, start_x, start_y){
+        this.note = n;
+        for(var i=0; i<len; i++){
+            if(i==0 || i==(len-1)){
+                xForm.setPinHeight(xForm.toIndex(start_x, start_y+i),0.75);
+                xForm.setPinHeight(xForm.toIndex(start_x-1, start_y+i),1);
+                xForm.setPinHeight(xForm.toIndex(start_x+1, start_y+i),1);
+            }
+            else{
+                xForm.setPinHeight(xForm.toIndex(start_x, start_y+i),0.75);
+            }
+        }
+    }
+
     var sequencer = {
         shakerPins: [],
         cols:[0,2,4,6,8,10,12,14],
@@ -172,7 +201,7 @@
         var x = xForm.toXY(data[0].index)[0];
         var y = xForm.toXY(data[0].index)[1];
         var h = data[0].height;
-        console.log(h);
+
         // if pin UP, set it DOWN
         if ((h == 127 || h == 137) && y != 23) {
 
