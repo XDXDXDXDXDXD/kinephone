@@ -155,8 +155,21 @@
                 xForm.setPinHeight(xForm.toIndex(start_x+1, start_y+i),1);
             }
             else{
-                xForm.setPinHeight(xForm.toIndex(start_x, start_y+i),0.6);
+                xForm.setPinHeight(xForm.toIndex(start_x-1, start_y+i),0);
+                xForm.setPinHeight(xForm.toIndex(start_x, start_y+i),0);
+                xForm.setPinHeight(xForm.toIndex(start_x+1, start_y+i),0);
             }
+        }
+
+        //Actuation Pin
+        function reset(){
+            xForm.setPinHeight(xForm.toIndex(start_x, start_y+~~(len/2)),0.42);
+        }
+
+        this.actuate = function(){
+            console.log("actuating...")
+            xForm.setPinHeight(xForm.toIndex(start_x, start_y+~~(len/2)),0.6);
+            window.setTimeout(reset,100);
         }
     }
 
@@ -183,12 +196,39 @@
     init();
     animate();
 
-    //TODO: debug start/stop pin here!
-    // for(var i=0; i<sequencer.cols.length; i++){
-    //     var index = xForm.toIndex(sequencer.cols[i],23);
-    //     xForm.setPinHeight(index,1);
-    //     sequencer.controls.push(index);
-    // }
+    //PLayground here
+    var e = new Note("A",7,45,0);
+
+    xForm.setPinHeight(xForm.toIndex(33,19),1)
+    xForm.setPinHeight(xForm.toIndex(33,20),1)
+    xForm.setPinHeight(xForm.toIndex(33,21),1)
+    xForm.setPinHeight(xForm.toIndex(33,22),1)
+
+    for(var i=0; i<13; i++){
+        xForm.setPinHeight(xForm.toIndex(33+i,22),1);
+        xForm.setPinHeight(xForm.toIndex(33+i,19),1);
+    }
+
+    function penOut(){
+        for(var i=0; i<11; i++){
+            xForm.setPinHeight(xForm.toIndex(34+i,20),i/10);
+            xForm.setPinHeight(xForm.toIndex(34+i,21),i/10);
+        }
+    }
+    function penIn(){
+        for(var i=0; i<11; i++){
+            xForm.setPinHeight(xForm.toIndex(44-i,20),i/10);
+            xForm.setPinHeight(xForm.toIndex(44-i,21),i/10);
+        }
+    }
+
+    window.setInterval(penOut,500);
+    window.setInterval(penIn,1000)
+
+    xForm.setPinHeight(xForm.toIndex(45,19),1)
+    xForm.setPinHeight(xForm.toIndex(45,20),1)
+    xForm.setPinHeight(xForm.toIndex(45,21),1)
+    xForm.setPinHeight(xForm.toIndex(45,22),1)
 
     for(var i=0; i<sequencer.shakerPins.length; i++){
         xForm.setPinHeight(sequencer.shakerPins[i],GROUND+0.2);
@@ -251,15 +291,14 @@
                 if(sequencer.beats[i].beat.isPlaying)
                     sequencer.beats[i].beat.animate();
             }
-            var ind = xForm.toIndex(15,sequencer.beats[0].beat.cursor+7);
-            var pre = xForm.toIndex(15,sequencer.beats[0].beat.cursor+6);
-            xForm.setPinHeight(pre,0.3);
-            xForm.setPinHeight(ind,0.37);
+            // var ind = xForm.toIndex(15,sequencer.beats[0].beat.cursor+7);
+            // var pre = xForm.toIndex(15,sequencer.beats[0].beat.cursor+6);
+            // xForm.setPinHeight(pre,0.3);
+            // xForm.setPinHeight(ind,0.37);
         //}
 
         frame ++;
     }
-
 
     function init() {
 
