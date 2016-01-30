@@ -101,9 +101,6 @@
     });
 
     socket.on("touch", function(data) {
-        //console.log(data[0]);
-
-
 
         // if pin UP, set it DOWN
         if (sequence.containsPin(data[0].index) &&
@@ -128,6 +125,7 @@
         {x: 1, y:0, retract: false, retractUp: false},
         {x: 1, y: 2, retract: false, retractUp: true}
     ];
+    
     function activatePins(activePins, shapeDisplay) {
         activePins.map(function(pin) {
            shapeDisplay.setPinHeight(pin.x, pin.y, 1);
