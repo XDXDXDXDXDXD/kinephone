@@ -133,6 +133,7 @@
 
     function Note(n, len, start_x, start_y){
         this.note = n;
+
         for(var i=0; i<len; i++){
             if(i==0 || i==(len-1)){
                 xForm.setPinHeight(xForm.toIndex(start_x, start_y+i),0.75);
@@ -153,14 +154,21 @@
             xForm.setPinHeight(xForm.toIndex(start_x, start_y+len-3),0.42);
         }
 
+        function resetPlay(){
+            xForm.setPinHeight(xForm.toIndex(start_x,23),0.6);
+        }
+
         this.actuate = function(){
             xForm.setPinHeight(xForm.toIndex(start_x, start_y+len-3),0.55);
             window.setTimeout(reset,100);
         }
 
-        //Play Pin
-        this.actuPin = xForm.toIndex(start_x,23);
-        xForm.setPinHeight(this.actuPin,0.6);
+        this.animatePlay = function(){
+            xForm.setPinHeight(xForm.toIndex(start_x,23),0.42);
+            window.setTimeout(resetPlay,100);
+        }
+
+        resetPlay();
     }
 
     function Block(start_x, start_y){
@@ -172,33 +180,98 @@
 
     var synth = {
         pinObj: [],
-        xylobricks: [{note:"A",length:10},
-                      {note:"B",length:9},
-                      {note:"C",length:9},
-                      {note:"D",length:8},
-                      {note:"E",length:8},
+        xylobricks: [{note:"A1",length:10},
+                      {note:"B1",length:9},
+                      {note:"C1",length:9},
+                      {note:"D1",length:8},
+                      {note:"E1",length:8},
                       {note:"F",length:8},
                       {note:"G",length:7},
-                      {note:"A",length:7},
-                      {note:"B",length:7},
-                      {note:"C",length:6},
-                      {note:"D",length:6},
-                      {note:"E",length:5}],
-        majorPentaScale: [{note:"A", length:10},
-                     {note:"C", length:9},
-                     {note:"D", length:8},
-                     {note:"E", length:8},
+                      {note:"A2",length:7},
+                      {note:"B2",length:7},
+                      {note:"C2",length:6},
+                      {note:"D2",length:6},
+                      {note:"E2",length:5}],
+        majorPentaScale: [{note:"A1", length:10},
+                     {note:"C1", length:9},
+                     {note:"D1", length:8},
+                     {note:"E1", length:8},
                      {note:"G", length:7},
-                     {note:"A", length:7},
-                     {note:"C", length:6}],
-         japScale: [{note:"B", length:9},
-                      {note:"C", length:9},
-                      {note:"E", length:8},
+                     {note:"A2", length:7},
+                     {note:"C2", length:6}],
+         japScale: [{note:"B1", length:9},
+                      {note:"C1", length:9},
+                      {note:"E1", length:8},
                       {note:"F", length:8},
-                      {note:"A", length:7},
-                      {note:"B", length:7},
-                      {note:"C", length:6}]
-    }
+                      {note:"A2", length:7},
+                      {note:"B2", length:7},
+                      {note:"C2", length:6}],
+        tracks: [{track:[{note:"A1", time:100},
+                         {note:"C1", time:100},
+                         {note:"D1", time:100},
+                         {note:"E1", time:100},
+                         {note:"G", time:100},
+                         {note:"A1", time:100},
+                         {note:"C2", time:100},
+                         {note:"C1", time:100},
+                         {note:"D2", time:100}]},
+                 {track:[{note:"A1", time:100},
+                          {note:"C1", time:100},
+                          {note:"D1", time:100},
+                          {note:"E1", time:100},
+                          {note:"D1", time:100},
+                          {note:"E1", time:100},
+                          {note:"G", time:100}]},
+                  {track:[{note:"C2", time:100},
+                           {note:"A2", time:100},
+                           {note:"G", time:100},
+                           {note:"A2", time:100},
+                           {note:"G", time:100},
+                           {note:"E1", time:100},
+                           {note:"G", time:100},
+                           {note:"E1", time:100},
+                           {note:"D1", time:100},
+                           {note:"E1", time:100},
+                           {note:"D1", time:100},
+                           {note:"C1", time:100}]}],
+            loopTrack: function(id,times){
+                    var len = this.trackLength(id);
+                    var syn = this;
+                    for(var i=0; i<times; i++){
+                        setTimeout(function(){
+                            syn.playTrack(id);
+                        }, len*i);
+                    }
+            },
+            trackLength: function(id){
+                    var len = 0;
+                    console.log(id);
+                    var track = this.tracks[id].track;
+                    for(var i=0; i < track.length; i++) {
+                        len += track[i].time;
+                    }
+                    return len;
+            },
+            playTrack: function(id){
+                for(var i=0; i < this.tracks[id].track.length; i++){
+                    var brick = this.tracks[id].track[i];
+                    this.playBrick(brick.note, brick.time);
+                }
+            },
+            playBrick: function(note, time){
+                console.log("playing %s", note)
+                for(var i=0; i < this.majorPentaScale.length; i++){
+                        if(note == this.majorPentaScale[i].note){
+                            var pin = this.pinObj[i];
+                            setTimeout(function () {
+                                pin.actuate();
+                                pin.animatePlay();
+                            }, time * i);
+                        }
+                }
+
+            }
+        }
 
     var sequencer = {
         shakerPins: [],
@@ -461,28 +534,43 @@
     }
 
     window.addEventListener('keydown', function(e) {
+        console.log(e.keyCode);
             switch(e.keyCode) {
                 case 90: //z
                     synth.pinObj[0].actuate();
+                    synth.pinObj[0].animatePlay();
                 break;
                 case 88: //x
                     synth.pinObj[1].actuate();
+                    synth.pinObj[1].animatePlay();
                 break;
                 case 67: //c
                     synth.pinObj[2].actuate();
+                    synth.pinObj[2].animatePlay();
                 break;
                 case 86: //v
                     synth.pinObj[3].actuate();
+                    synth.pinObj[3].animatePlay();
                 break;
                 case 66: //b
                     synth.pinObj[4].actuate();
+                    synth.pinObj[4].animatePlay();
                 break;
                 case 78: //n
                     synth.pinObj[5].actuate();
+                    synth.pinObj[5].animatePlay();
                 break;
                 case 77: //m
                     synth.pinObj[6].actuate();
+                    synth.pinObj[6].animatePlay();
                 break;
+            }
+
+            //Melody Bank on Keys from 1-9
+            for(var i = 0; i < 9; i++){
+                if(e.keyCode == 49+i){
+                    synth.loopTrack(i,4);
+                }
             }
     });
 
