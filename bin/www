@@ -14,8 +14,6 @@ var osc = require('osc');
  */
 
 var port = normalizePort(process.env.PORT || '3000');
-var displayType = "transform"
-var logger = false;
 app.set('port', port);
 
 /**
@@ -24,6 +22,7 @@ app.set('port', port);
 
 var server = http.createServer(app);
 var io = require('socket.io')(server);
+
 /**
  * Listen on provided port, on all network interfaces.
  */
@@ -80,123 +79,93 @@ function onError(error) {
   }
 }
 
-/**
- * OSC Integretaion over UDP
+/* OSC Integretaion over UDP
 */
-
-var sockets=[];
-var socketHeights;
-
-var udpWS = new osc.UDPPort({
+var udpPortSend = new osc.UDPPort({
     localAddress: "0.0.0.0",
     localPort: 57121
 });
 
-var udpProcessing = new osc.UDPPort({
+var udpPortProc = new osc.UDPPort({
     localAddress: "0.0.0.0",
-    localPort: 57122
+    localPort: 57123
 });
 
-udpWS.on("error", function (err) {
+udpPortSend.on("ready", function () {
+    console.log("Listening for OSC over UDP - WS");
+});
+
+udpPortProc.on("ready", function () {
+    console.log("Listening for OSC over UDP - Processing");
+});
+
+var control;
+var prevMsgString;
+var sockets=[];
+var socketHeights;
+
+
+udpPortProc.on("message", function (oscMessage) {   
+    udpPortSend.send(oscMessage, "127.0.0.1", 57122);
+
+})
+
+udpPortSend.on("message", function (oscMessage) {
+
+    var oscPins=[];
+    for(var i=0; i<oscMessage.args.length-1; i+=2 ) {
+        var touchPin={};
+        touchPin.index = oscMessage.args[i];
+        touchPin.height = oscMessage.args[i+1];
+        oscPins.push(touchPin);
+    }
+
+    for(var i=0; i<sockets.length; i++){
+         sockets[i].emit("touch", oscPins);
+    }
+
+    if(oscMessage.address == "/left" || oscMessage.address == "/right")
+        udpPortProc.send(oscMessage,"127.0.0.1",57124);
+
+});
+
+udpPortSend.on("error", function (err) {
     console.log(err);
 });
 
-udpWS.on("ready", function () {
-    console.log("OSC over UDP for Websockets established");
-});
-
-udpWS.open();
-
-udpProcessing.on("ready", function(){
-    console.log("OSC over UDP for processing established");
-});
-
-udpProcessing.on("error", function (err) {
-    console.log(err);
-});
-
-udpProcessing.on("message", function (oscMessage) {
-    udpWS.send(oscMessage, "127.0.0.1", 57121);
-});
-
-udpProcessing.open();
-
-/**
-* Handle Socket.io events
-*/
+udpPortSend.open();
+udpPortProc.open();
 
 io.on('connection', function (socket) {
     sockets.push(socket);
     startSocketListener();
 });
 
+
+/**
+* Handle Socket.io events
+*/
+//Storing control obj here [hack]
+
 //Send update Message
 function startSocketListener(){
     for(var i=0; i<sockets.length; i++){
-        sockets[i].on('P', function (data) {
+        sockets[i].on('P1', function (data) {
             socketHeights=data;
-        	udpWS.send({address:"/height", args: data }, "127.0.0.1", 57121);
-            if(logger) console.log('U: %s', JSON.stringify(data));
+        	udpPortSend.send({address:"/height1", args: data }, "127.0.0.1", 57122);
+            //console.log('U: %s', JSON.stringify(data));
         });
 
-        sockets[i].on('P2', function (data) {
+        sockets[i].on('P3', function (data) {
             socketHeights=data;
-        	udpWS.send({address:"/height2", args: data }, "127.0.0.1", 57121);
-            if(logger) console.log('U: %s', JSON.stringify(data));
+        	udpPortSend.send({address:"/height3", args: data }, "127.0.0.1", 57122);
+            //console.log('U: %s', JSON.stringify(data));
         });
 
     }
 }
 
-/**
- * Cooperform config
-*/
 
-if(displayType == "cooperform"){
-
-    var prevMsgString;
-    var broken = {
-        initialized : false,
-        pins : [72, 73, 74, 75, 76, 77, 575, 97],
-        initBrokenPins : function(msg) {
-            for (var i = 0; i < msg.args.length-1; i +=2) {
-                this.pins.push(msg.args[i]);
-            }
-            console.log("broken pins: " + this.pins.toString());
-            this.initialized = true;
-        }
-    }
-
-    udpWS.on("ready", function () {
-        console.log("Listening for OSC over UDP.");
-        udpWS.send({address:"/height", args: [0, 255, 0] }, "127.0.0.1", 57122);
-    });
-
-    udpWS.on("message", function (oscMessage) {
-        if (!broken.initialized) {
-            broken.initBrokenPins(oscMessage);
-        }
-        var msgString = JSON.stringify(oscMessage);
-        if (msgString != prevMsgString) {
-            var oscPinsMinusBroken=[];
-            for(var i=0; i<oscMessage.args.length-1; i+=2 ) {
-                var touchPin={};
-                touchPin.index = oscMessage.args[i];
-                touchPin.height = oscMessage.args[i+1];
-                if (broken.pins.indexOf(touchPin.index) < 0) {
-                    oscPinsMinusBroken.push(touchPin);
-                }
-            }
-            if (oscPinsMinusBroken.length > 0) {
-                console.log(oscPinsMinusBroken);
-                prevMsgString = msgString;
-                for(var i=0; i<sockets.length; i++){
-                     sockets[i].emit("touch", oscPinsMinusBroken);
-                }
-            }
-        }
-    });
-}
 
 /**
  * Event listener for HTTP server "listening" event.
@@ -208,5 +177,4 @@ function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
-  console.log("xForm 1.1 Shape-Display Engine is now ready \n -------------------------------------------");
 }

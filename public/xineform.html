@@ -146,18 +146,21 @@
             }
         }
 
+        xForm.setPinHeight(xForm.toIndex(start_x, start_y+len-3),0.42);
+        xForm.setPinHeight(xForm.toIndex(start_x, start_y+len),1);
         //Actuation Pin
         function reset(){
-            xForm.setPinHeight(xForm.toIndex(start_x, start_y+~~(len/2)),0.42);
+            xForm.setPinHeight(xForm.toIndex(start_x, start_y+len-3),0.42);
         }
 
         this.actuate = function(){
-            xForm.setPinHeight(xForm.toIndex(start_x, start_y+~~(len/2)),0.6);
+            xForm.setPinHeight(xForm.toIndex(start_x, start_y+len-3),0.55);
             window.setTimeout(reset,100);
         }
 
+        //Play Pin
         this.actuPin = xForm.toIndex(start_x,23);
-        xForm.setPinHeight(this.actuPin,1);
+        xForm.setPinHeight(this.actuPin,0.6);
     }
 
     function Block(start_x, start_y){
@@ -187,7 +190,7 @@
                      {note:"E", length:8},
                      {note:"G", length:7},
                      {note:"A", length:7},
-                     {note:"A", length:6}],
+                     {note:"C", length:6}],
          japScale: [{note:"B", length:9},
                       {note:"C", length:9},
                       {note:"E", length:8},
@@ -220,60 +223,33 @@
     init();
     animate();
 
-    //PLayground here
+    //Init Instruments
     for (var i=0; i<synth.majorPentaScale.length; i++){
         var n = synth.majorPentaScale[i];
-        synth.pinObj.push(new Note(n.note,n.length,34+(i*2),2));
+        synth.pinObj.push(new Note(n.note,n.length,33+(i*2),2));
+        //synth.pinObj.push(new Note(n.note,n.length,33+(i*2),12));
     }
 
-
-    xForm.setPinHeight(xForm.toIndex(33,19),1)
-    xForm.setPinHeight(xForm.toIndex(33,20),1)
-    xForm.setPinHeight(xForm.toIndex(33,21),1)
-    xForm.setPinHeight(xForm.toIndex(33,22),1)
-
-    for(var i=0; i<13; i++){
-        xForm.setPinHeight(xForm.toIndex(33+i,22),1);
-        xForm.setPinHeight(xForm.toIndex(33+i,19),1);
+    for(var i=0; i<16; i++){
+        xForm.setPinHeight(xForm.toIndex(32+i,1),1);
     }
-
-    function penOut(){
-        for(var i=0; i<11; i++){
-            xForm.setPinHeight(xForm.toIndex(34+i,20),i/10);
-            xForm.setPinHeight(xForm.toIndex(34+i,21),i/10);
-        }
-    }
-    function penIn(){
-        for(var i=0; i<11; i++){
-            xForm.setPinHeight(xForm.toIndex(44-i,20),i/10);
-            xForm.setPinHeight(xForm.toIndex(44-i,21),i/10);
-        }
-    }
-
-    // window.setInterval(penOut,500);
-    // window.setInterval(penIn,1000);
-
-    xForm.setPinHeight(xForm.toIndex(45,19),1)
-    xForm.setPinHeight(xForm.toIndex(45,20),1)
-    xForm.setPinHeight(xForm.toIndex(45,21),1)
-    xForm.setPinHeight(xForm.toIndex(45,22),1)
 
     for(var i=0; i<sequencer.shakerPins.length; i++){
         xForm.setPinHeight(sequencer.shakerPins[i],GROUND+0.2);
     }
-
-    var beatBlock = new Block(36, 12);
 
     socket.on("connect", function(){
         console.log("CONNECTION");
     });
 
     socket.on("touch", function(data) {
+        if(data[0] != undefined){
         var x = xForm.toXY(data[0].index)[0];
         var y = xForm.toXY(data[0].index)[1];
         var h = data[0].height;
-
+        console.log(data[0].index)
         // if pin UP, set it DOWN
+
         if ((h == 127 || h == 137) && y != 23) {
                 for(var i=0; i<sequencer.cols.length; i++){
                     if(x == sequencer.cols[i])
@@ -289,7 +265,7 @@
             }
         }
 
-        if(y == 23){
+        if(y == 23 && x > 15){
             for(var i=0; i<sequencer.cols.length; i++){
                 if(x == sequencer.cols[i] ){
                     console.log("Pause/Play col %d", x);
@@ -299,9 +275,12 @@
         }
 
         for(var i=0; i<synth.pinObj.length; i++){
+
             if(data[0].index == synth.pinObj[i].actuPin){
+
                 synth.pinObj[i].actuate();
             }
+        }
         }
 
     });
@@ -446,15 +425,16 @@
       camera.updateProjectionMatrix();
       kUpdate();
 
+
       if (controlVars.sendToPhysical) {
           // for OSC message length, dividing the shape display into 2 halves to send
-          msgTop = xForm.getHeightsMsgForPhysical(true);
-          if (msgTop.length > 0) {
-            socket.emit('P', msgTop);
+          msgLeft = xForm.left.getHeightsMsgForPhysical();
+          if (msgLeft.length > 0) {
+            socket.emit('P1', msgLeft);
           }
-          msgBottom = xForm.getHeightsMsgForPhysical(false);
-          if (msgBottom.length > 0) {
-            socket.emit('P2', msgBottom);
+          msgRight = xForm.right.getHeightsMsgForPhysical();
+          if (msgRight.length > 0) {
+            socket.emit('P3', msgRight);
           }
       }
     }
@@ -480,29 +460,28 @@
       }
     }
 
-    windowX = 0
-    windowY = 0
     window.addEventListener('keydown', function(e) {
-            console.log(e.keyCode);
             switch(e.keyCode) {
-                case 68:
-                    xForm.clearDisplay(0.3);
-                case 32:
-                case 37:
-                    windowX += 1;
+                case 90: //z
+                    synth.pinObj[0].actuate();
                 break;
-                case 39:
-                    windowX -= 1;
+                case 88: //x
+                    synth.pinObj[1].actuate();
                 break;
-                case 38:
-                    windowY += 1;
+                case 67: //c
+                    synth.pinObj[2].actuate();
                 break;
-                case 40:
-                    windowY -= 1;
+                case 86: //v
+                    synth.pinObj[3].actuate();
                 break;
-                //Enter runs the code
-                case 13:
-
+                case 66: //b
+                    synth.pinObj[4].actuate();
+                break;
+                case 78: //n
+                    synth.pinObj[5].actuate();
+                break;
+                case 77: //m
+                    synth.pinObj[6].actuate();
                 break;
             }
     });
