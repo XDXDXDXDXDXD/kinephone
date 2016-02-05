@@ -30,6 +30,9 @@
     </style>
   </head>
   <body>
+    <div style="display:none">
+        <canvas id="sixtyCanvas" width="48" height="16"></canvas>
+    </div>
     <div id="example"></div>
     <script type="x-shader/x-vertex" id="vertexShader">
         varying vec3 vWorldPosition;
@@ -72,7 +75,7 @@
 
     var mapImageContext;
     var xForm;
-    var GROUND = 0.3;
+    var GROUND = 0.1;
     var frame = 0;
     var fpm = 32;
     var tick;
@@ -136,8 +139,8 @@
         for(var i=0; i<len; i++){
             if(i==0 || i==(len-1)){
                 xForm.setPinHeight(xForm.toIndex(start_x, start_y+i),handler_height || 0.75);
-                xForm.setPinHeight(xForm.toIndex(start_x-1, start_y+i),1);
-                xForm.setPinHeight(xForm.toIndex(start_x+1, start_y+i),1);
+                //xForm.setPinHeight(xForm.toIndex(start_x-1, start_y+i),1);
+                //xForm.setPinHeight(xForm.toIndex(start_x+1, start_y+i),1);
             }
             else{
                 xForm.setPinHeight(xForm.toIndex(start_x-1, start_y+i),0);
@@ -147,7 +150,7 @@
         }
 
         xForm.setPinHeight(xForm.toIndex(start_x, start_y+len-3),reset_height || 0.42);
-        xForm.setPinHeight(xForm.toIndex(start_x, start_y+len),1);
+        //xForm.setPinHeight(xForm.toIndex(start_x, start_y+len),1);
 
         //Actuation Pin
         function reset(){
@@ -160,15 +163,15 @@
 
         this.actuate = function(){
             xForm.setPinHeight(xForm.toIndex(start_x, start_y+len-3),actuation_height || 0.55);
-            window.setTimeout(reset,100);
+            window.setTimeout(reset,50);
         }
 
         this.animatePlay = function(){
-            xForm.setPinHeight(xForm.toIndex(start_x,23),actuation_height || 0.55);
-            window.setTimeout(resetPlay,100);
+            //xForm.setPinHeight(xForm.toIndex(start_x,23),actuation_height || 0.55);
+            //window.setTimeout(resetPlay,100);
         }
 
-        resetPlay();
+        //resetPlay();
     }
 
     function Block(start_x, start_y){
@@ -181,68 +184,45 @@
     var synth = {
         type:"chimes", //or chimes
         pinObj: [],
-        xylobricks: [
-              {note:"A1",length:10},
-              {note:"B1",length:9},
-              {note:"C1",length:9},
-              {note:"D1",length:8},
-              {note:"E1",length:8},
-              {note:"F",length:8},
-              {note:"G",length:7},
-              {note:"A2",length:7},
-              {note:"B2",length:7},
-              {note:"C2",length:6},
-              {note:"D2",length:6},
-              {note:"E2",length:5}],
-        majorPentaScale: [
-             {note:"A1", length:10},
-             {note:"C1", length:9},
-             {note:"D1", length:8},
-             {note:"E1", length:8},
-             {note:"G", length:7},
-             {note:"A2", length:7},
-             {note:"C2", length:6}],
-         japScale: [
-              {note:"B1", length:9},
-              {note:"C1", length:9},
-              {note:"E1", length:8},
-              {note:"F", length:8},
-              {note:"A2", length:7},
-              {note:"B2", length:7},
-              {note:"C2", length:6}],
+        birthdayTones: [
+            {note:"C1", length: 5},
+            {note:"D1", length: 5},
+            {note:"E1", length: 5},
+            {note:"G1", length: 5},
+            {note:"BF1", length: 5},
+            {note:"C2", length: 5},
+            {note:"A1", length: 5},
+            {note:"F1", length: 5},
+        ],
         tracks: [
             {track:[
-                 {note:"A1", time:100},
-                 {note:"C1", time:100},
-                 {note:"D1", time:100},
-                 {note:"E1", time:100},
-                 {note:"G", time:100},
-                 {note:"A1", time:100},
-                 {note:"C2", time:100},
-                 {note:"C1", time:100},
-                 {note:"D2", time:100}]},
-             {track:[
-                  {note:"A1", time:100},
-                  {note:"C1", time:100},
-                  {note:"D1", time:100},
-                  {note:"E1", time:100},
-                  {note:"D1", time:100},
-                  {note:"E1", time:100},
-                  {note:"G", time:100}]},
-              {track:[
-                   {note:"C2", time:100},
-                   {note:"A2", time:100},
-                   {note:"G", time:100},
-                   {note:"A2", time:100},
-                   {note:"G", time:100},
-                   {note:"E1", time:100},
-                   {note:"G", time:100},
-                   {note:"E1", time:100},
-                   {note:"D1", time:100},
-                   {note:"E1", time:100},
-                   {note:"D1", time:100},
-                   {note:"C1", time:100}]}
-               ],
+                 {note:"C1", time:1},
+                 {note:"C1", time:1.75},
+                 {note:"D1", time:2},
+                 {note:"C1", time:3},
+                 {note:"F1", time:4},
+                 {note:"E1", time:5},
+                 {note:"C1", time:7},
+                 {note:"C1", time:7.75},
+                 {note:"D1", time:8},
+                 {note:"C1", time:9},
+                 {note:"G1", time:10},
+                 {note:"F1", time:11},
+                 {note:"C1", time:13},
+                 {note:"C1", time:13.75},
+                 {note:"C2", time:14},
+                 {note:"A1", time:15},
+                 {note:"F1", time:16},
+                 {note:"E1", time:17},
+                 {note:"D1", time:18},
+                 {note:"BF1", time:19},
+                 {note:"BF1", time:19.75},
+                 {note:"A1", time:20},
+                 {note:"F1", time:21},
+                 {note:"G1", time:22},
+                 {note:"F1", time:23},
+             ]},
+         ],
             loopTrack: function(id,times){
                     var len = this.trackLength(id);
                     var syn = this;
@@ -269,13 +249,13 @@
             },
             playBrick: function(note, time){
                 console.log("playing %s", note)
-                for(var i=0; i < this.majorPentaScale.length; i++){
-                        if(note == this.majorPentaScale[i].note){
+                for(var i=0; i < this.birthdayTones.length; i++){
+                        if(note == this.birthdayTones[i].note){
                             var pin = this.pinObj[i];
                             setTimeout(function () {
                                 pin.actuate();
                                 pin.animatePlay();
-                            }, time * i);
+                            }, time * 750);
                         }
                 }
             }
@@ -297,6 +277,42 @@
     }
 
 
+    var six = new Image();
+    six.src = 'textures/6.jpg';
+    var zero = new Image();
+    zero.src = 'textures/0.jpg';
+
+    function raiseNumbers(number, module, count) {
+        var sixContext = document.getElementById('sixtyCanvas').getContext('2d');
+        sixContext.drawImage(number, 0, 0);
+        sixData = sixContext.getImageData(0, 0, 16, 16).data;
+        for (var i = 0; i < sixData.length; i+=4) {
+            if (sixData[i] < 128)
+                module.pinHeightPlus(i/4 + 64, 0.01);
+        }
+        if (count < 100) {
+            setTimeout(raiseNumbers, 220, number, module, count+1);
+        }
+    }
+    function raiseCandles(count) {
+        for (var i = 1; i <=6; i++)
+            xForm.middle.pinHeightPlus(i*2, 4, 0.005);
+        if (count < 100)
+            setTimeout(raiseCandles, 220, count+1);
+
+    }
+    function raiseCake(count) {
+        for (var x = 1; x < 15; x++) {
+            for (var y = 12; y < 21; y++) {
+                if (y == 12 || y == 14 || y == 20)
+                    xForm.middle.pinHeightPlus(x, y, 0.0045);
+                else
+                    xForm.middle.pinHeightPlus(x, y, 0.0025);
+            }
+        }
+        if (count < 100)
+            setTimeout(raiseCake, 220, count+1);
+    }
 
     init();
     animate();
@@ -305,93 +321,80 @@
         console.log("CONNECTION");
     });
 
-    socket.on("touch", function(data) {
-        if(data[0] != undefined){
-            var x = xForm.toXY(data[0].index)[0];
-            var y = xForm.toXY(data[0].index)[1];
-            var h = data[0].height;
-            console.log(data[0].index)
-
-            // if pin UP, set it DOWN
-            if ((h == 127 || h == 137) && y != 23) {
-                    for(var i=0; i<sequencer.cols.length; i++){
-                        if(x == sequencer.cols[i])
-                            sequencer.beats[i].beat.removePin(data[0].index);
-                    }
-            }
-
-            // if pin DOWN, set it UP
-            else if ((h == 0 || h == 10) && y != 23) {
-                for(var i=0; i<sequencer.cols.length; i++){
-                    if(x == sequencer.cols[i] )
-                        sequencer.beats[i].beat.addPin(data[0].index);
-                }
-            }
-
-            if(y == 23 && x > 15){
-                for(var i=0; i<sequencer.cols.length; i++){
-                    if(x == sequencer.cols[i] )
-                        sequencer.beats[i].beat.isPlaying = !sequencer.beats[i].beat.isPlaying;
-                }
-            }
-
-            for(var i=0; i<synth.pinObj.length; i++){
-                if(data[0].index == synth.pinObj[i].actuPin)
-                    synth.pinObj[i].actuate();
-            }
-        }
-    });
+    // socket.on("touch", function(data) {
+    //     if(data[0] != undefined){
+    //         var x = xForm.toXY(data[0].index)[0];
+    //         var y = xForm.toXY(data[0].index)[1];
+    //         var h = data[0].height;
+    //         console.log(data[0].index)
+    //
+    //         // if pin UP, set it DOWN
+    //         // if ((h == 127 || h == 137) && y != 23) {
+    //         //         for(var i=0; i<sequencer.cols.length; i++){
+    //         //             //if(x == sequencer.cols[i])
+    //         //                 //sequencer.beats[i].beat.removePin(data[0].index);
+    //         //         }
+    //         // }
+    //         //
+    //         // // if pin DOWN, set it UP
+    //         // else if ((h == 0 || h == 10) && y != 23) {
+    //         //     for(var i=0; i<sequencer.cols.length; i++){
+    //         //         //if(x == sequencer.cols[i] )
+    //         //             //sequencer.beats[i].beat.addPin(data[0].index);
+    //         //     }
+    //         // }
+    //         //
+    //         // if(y == 23 && x > 15){
+    //         //     for(var i=0; i<sequencer.cols.length; i++){
+    //         //         // if(x == sequencer.cols[i] )
+    //         //         //     sequencer.beats[i].beat.isPlaying = !sequencer.beats[i].beat.isPlaying;
+    //         //     }
+    //         // }
+    //
+    //         for(var i=0; i<synth.pinObj.length; i++){
+    //             if(data[0].index == synth.pinObj[i].actuPin)
+    //                 synth.pinObj[i].actuate();
+    //         }
+    //     }
+    // });
 
     function kInit() {
-
         xForm.clearDisplay(GROUND);
 
-        //Init Instruments
-        for(var i=0; i<sequencer.cols.length; i++){
-            var sequence = new Sequence(sequencer.cols[i]);
-            sequencer.beats.push(sequence);
-        }
+        var n = synth.birthdayTones[0];
+        synth.pinObj.push(new Note(n.note, n.length, 16, 15, 0.4, 0.33, 0.56));
+        n = synth.birthdayTones[1];
+        synth.pinObj.push(new Note(n.note, n.length, 31, 15, 0.4, 0.33, 0.56));
 
-        for(var i=0; i<sequencer.cols.length; i++){
-            sequencer.beats[i].beat.pins.map(function(pin) {
-                sequencer.shakerPins.push(xForm.toIndex(pin.x, pin.y));
-            });
-        }
+         for (var i = 2; i < synth.birthdayTones.length; i++) {
+             n = synth.birthdayTones[i];
+             synth.pinObj.push(new Note(n.note, n.length, 14+(i*2), 6, 0.4, 0.33, 0.56));
+         }
 
-        for(var i=0; i<sequencer.shakerPins.length; i++){
-            xForm.setPinHeight(sequencer.shakerPins[i],GROUND+0.2);
-        }
-
-        for (var i=0; i<synth.majorPentaScale.length; i++){
-            var n = synth.majorPentaScale[i];
-            if(synth.type == "xylophone")
-                synth.pinObj.push(new Note(n.note,n.length,33+(i*2),2));
-            else if(synth.type == "chimes"){
-                synth.pinObj.push(new Note(n.note,n.length,33+(i*2),2,0.66,0.33,0.53));
-                }
-        }
-
-        for(var i=0; i<16; i++){
-            xForm.setPinHeight(xForm.toIndex(32+i,1),1);
-        }
-
-
+         //setTimeout(happyBirthday, 200);
     }
 
+    function happyBirthday() {
+        //synth.playTrack(0);
+        //raiseNumbers(six, xForm.left, 0);
+        //raiseNumbers(zero, xForm.right, 0);
+        raiseCake(0);
+        raiseCandles(0);
+    }
 
     function kUpdate() {
         tick = frame % fpm;
 
-        for(var i=0; i<sequencer.cols.length; i++){
-            sequencer.beats[i].beat.mapSequenceToPattern();
-            if(sequencer.beats[i].beat.isPlaying)
-                sequencer.beats[i].beat.animate();
-        }
-
-        var ind = xForm.toIndex(15,sequencer.beats[0].beat.cursor+7);
-        var pre = xForm.toIndex(15,sequencer.beats[0].beat.cursor+6);
-        xForm.setPinHeight(pre,0.3);
-        xForm.setPinHeight(ind,0.37);
+        // for(var i=0; i<sequencer.cols.length; i++){
+        //     sequencer.beats[i].beat.mapSequenceToPattern();
+        //     if(sequencer.beats[i].beat.isPlaying)
+        //         sequencer.beats[i].beat.animate();
+        // }
+        //
+        // var ind = xForm.toIndex(15,sequencer.beats[0].beat.cursor+7);
+        // var pre = xForm.toIndex(15,sequencer.beats[0].beat.cursor+6);
+        // xForm.setPinHeight(pre,0.3);
+        // xForm.setPinHeight(ind,0.37);
 
         frame ++;
     }
@@ -483,7 +486,7 @@
             this.sendToPhysical = true;
         };
         var gui = new dat.GUI();
-        gui.add(controlVars, 'sendToPhysical', true);
+        gui.add(controlVars, 'sendToPhysical', false);
 
         kInit();
     }
@@ -516,6 +519,10 @@
           if (msgLeft.length > 0) {
             socket.emit('P1', msgLeft);
           }
+          msgCenter = xForm.middle.getHeightsMsgForPhysical();
+          if (msgCenter.length > 0) {
+              socket.emit('P2', msgCenter);
+          }
           msgRight = xForm.right.getHeightsMsgForPhysical();
           if (msgRight.length > 0) {
             socket.emit('P3', msgRight);
@@ -547,6 +554,11 @@
     window.addEventListener('keydown', function(e) {
         console.log(e.keyCode);
             switch(e.keyCode) {
+                case 32:
+                    synth.playTrack(0);
+                    raiseNumbers(six, xForm.left, 0);
+                    raiseNumbers(zero, xForm.right, 0);
+                break;
                 case 90: //z
                     synth.pinObj[0].actuate();
                     synth.pinObj[0].animatePlay();

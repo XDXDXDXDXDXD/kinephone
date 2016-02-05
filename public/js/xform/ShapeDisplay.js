@@ -147,7 +147,7 @@ ShapeDisplay.prototype.pinHeightPlus = function(x, y, amount) {
       amount = y;
   }
   if (index < this.pins.length) {
-      this.setPinHeightHelper(index, this.pinHeights[index]-amount);
+      this.setPinHeightHelper(index, this.pinHeights[index]+amount);
   }
 }
 ShapeDisplay.prototype.pinHeightMinus = function(x, y, amount) {
@@ -158,7 +158,7 @@ ShapeDisplay.prototype.pinHeightMinus = function(x, y, amount) {
       amount = y;
   }
   if (index < this.pins.length) {
-      this.setPinHeightHelper(index, this.pinHeights[index]+amount);
+      this.setPinHeightHelper(index, this.pinHeights[index]-amount);
   }
 }
 ShapeDisplay.prototype.setPinHeightHelper = function(index, h) {

@@ -105,7 +105,7 @@ var sockets=[];
 var socketHeights;
 
 
-udpPortProc.on("message", function (oscMessage) {   
+udpPortProc.on("message", function (oscMessage) {
     udpPortSend.send(oscMessage, "127.0.0.1", 57122);
 
 })
@@ -155,7 +155,11 @@ function startSocketListener(){
         	udpPortSend.send({address:"/height1", args: data }, "127.0.0.1", 57122);
             //console.log('U: %s', JSON.stringify(data));
         });
-
+        sockets[i].on('P2', function (data) {
+            socketHeights=data;
+        	udpPortSend.send({address:"/height2", args: data }, "127.0.0.1", 57122);
+            //console.log('U: %s', JSON.stringify(data));
+        });
         sockets[i].on('P3', function (data) {
             socketHeights=data;
         	udpPortSend.send({address:"/height3", args: data }, "127.0.0.1", 57122);
